@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum transitionTypes {
+  groceries
+  restaurant
+  transport
+  education
+  health
+}
+
+model companies {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  apiKey    String?
+  employees employees[]
+}
+
+model employees {
+  id        Int    @id @default(autoincrement())
+  fullName  String
+  cpf       String @unique
+  email     String @unique
+  companyId Int
+
+  company companies @relation(fields: [companyId], references: [id])
+
+  cards cards[]
+}
+
+model cards {
+  id             Int             @id @default(autoincrement())
+  employeeId     Int
+  number         String          @unique
+  cardholderName String
+  securityCode   String
+  expirationDate String
+  password       String?
+  isVirtual      Boolean
+  originalCardId Int?
+  isBlocked      Boolean
+  type           transitionTypes
+
+  employee  employees   @relation(fields: [employeeId], references: [id])
+  payments  payments[]
+  recharges recharges[]
+}
+
+model payments {
+  id          Int      @id @default(autoincrement())
+  cardId      Int
+  bussinessId Int
+  timestamp   DateTime
+  amount      Int
+
+  card cards @relation(fields: [cardId], references: [id])
+}
+
+model recharges {
+  id        Int      @id @default(autoincrement())
+  cardId    Int
+  timestamp DateTime
+  amount    Int
+
+  card cards @relation(fields: [cardId], references: [id])
+}
+
+model businesses {
+  id   Int             @id @default(autoincrement())
+  name String          @unique
+  type transitionTypes
+}
