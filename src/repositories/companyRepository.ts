@@ -1,4 +1,4 @@
-import { connection } from "../database";
+import { connection } from "../db/database";
 
 export interface Company {
   id: number;
@@ -7,7 +7,7 @@ export interface Company {
 }
 
 export async function findByApiKey(apiKey: string) {
-  const result = await connection.query<Company, [string]>(
+  const result = await connection.query<Company>(
     `SELECT * FROM companies WHERE "apiKey"=$1`,
     [apiKey]
   );

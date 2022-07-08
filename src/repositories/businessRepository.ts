@@ -1,4 +1,4 @@
-import { connection } from "../database";
+import { connection } from "../db/database";
 import { TransactionTypes } from "./cardRepository";
 
 export interface Business {
