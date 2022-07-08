@@ -1,4 +1,4 @@
-import { connection } from "../database";
+import { connection } from "../db/database";
 
 export interface Recharge {
   id: number;

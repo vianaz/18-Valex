@@ -1,4 +1,4 @@
-import { connection } from "../database";
+import { connection } from "../db/database";
 import { mapObjectToUpdateQuery } from "../utils/sqlUtils";
 
 export type TransactionTypes =
