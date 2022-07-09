@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { CardController } from "../controllers/cardController";
+import { apiKeyAndTypeMiddleware } from "../middlewares/apiKeyAndTypeMiddleware";
 
 export class CardRouter {
   public router: Router;
@@ -24,7 +25,7 @@ export class CardRouter {
       visualizeCard,
     } = this.cardController;
 
-    router.get("/createCard", createCard);
+    router.post("/card", apiKeyAndTypeMiddleware, createCard);
     router.get("/activeCard", activeCard);
     router.get("/blockCard", blockCard);
     router.get("/deleteCard", deleteCard);

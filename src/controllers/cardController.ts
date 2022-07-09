@@ -3,63 +3,59 @@ import { TransactionTypes } from "../repositories/cardRepository";
 import { Employee } from "../repositories/employeeRepository";
 import { CardServices, CreateCardService } from "../services/cardServices";
 
-interface MethodsProps {
-  req: Request<CreateCardBody>;
-  res: Response;
-}
 interface CreateCardBody {
   cardType: TransactionTypes;
   employeeId: number;
 }
 
+// tentar enteder porque o constructor não tá funcionando
 export class CardController {
-  private cardServices: CardServices;
-  private createCardService: CreateCardService;
+  async createCard(req: Request, res: Response) {
+    const cardServices = new CardServices();
+    const createCardService = new CreateCardService();
 
-  constructor() {
-    this.cardServices = new CardServices();
-    this.createCardService = new CreateCardService();
-  }
-
-  async createCard({ req, res }: MethodsProps) {
-    const apiKey: string = req.headers.apiKey as string;
+    const apiKey = req.headers["x-api-key"] as string;
     const { cardType, employeeId }: CreateCardBody = req.body;
 
-    const haveApiKey =
-      this.cardServices.apiKeyVerification(apiKey) === undefined;
-    const isCorrectType = this.cardServices.verifyTypeCard(cardType);
-    const employee = await this.cardServices.findEmployee(employeeId);
-    // refatorar esses if's depois
-    if (haveApiKey && isCorrectType) {
-      return res.send("não existe essa api key");
-    }
-
-    if (employee === undefined) {
-      return res.send("não existe esse funcionário");
-    }
-
-    this.createCardService.buildCardInfo(
-      employeeId,
+    const employee = await cardServices.findEmployee(employeeId);
+    const employeeHaveTypeCard = await cardServices.verifyEmployeeHaveTypeCard(
       cardType,
-      employee.fullName,
+      employeeId,
     );
-    
-    res.send("createCard");
+
+    // refatorar esses if's depois
+    if (employee === undefined || employeeHaveTypeCard) {
+      // refatorar para novo formato de erro
+      const typeError =
+        (employee === undefined && {
+          stutsCode: 404,
+          message: "not exist this employee",
+        }) ||
+        (employeeHaveTypeCard && {
+          stutsCode: 409,
+          message: "employee have this type",
+        });
+
+      return res.status(typeError.stutsCode).send(typeError.message);
+    }
+
+    createCardService.buildCardInfo(employeeId, cardType, employee.fullName);
+    res.status(201).send("card created with success");
   }
 
-  activeCard({ req, res }: MethodsProps) {
+  activeCard(req: Request, res: Response) {
     res.send("activeCard");
   }
-  visualizeCard({ req, res }: MethodsProps) {
+  visualizeCard(req: Request, res: Response) {
     res.send("visualizeCard");
   }
-  visualizeAmount({ req, res }: MethodsProps) {
+  visualizeAmount(req: Request, res: Response) {
     res.send("visualizeAmount");
   }
-  blockCard({ req, res }: MethodsProps) {
+  blockCard(req: Request, res: Response) {
     res.send("blockCard");
   }
-  deleteCard({ req, res }: MethodsProps) {
+  deleteCard(req: Request, res: Response) {
     res.send("deleteCard");
   }
 }

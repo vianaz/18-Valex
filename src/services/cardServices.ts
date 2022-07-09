@@ -1,7 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { log } from "console";
 import {
   CardInsertData,
   findByTypeAndEmployeeId,
+  insert,
   TransactionTypes,
 } from "../repositories/cardRepository";
 import { findByApiKey } from "../repositories/companyRepository";
@@ -13,8 +15,8 @@ import { sumYears } from "../utils/dayjsUtil";
 export class CardServices {
   private YEAR_VALID = 5;
 
-  apiKeyVerification(apiKey: string) {
-    const apiKeyQuery = findByApiKey(apiKey);
+  async apiKeyVerification(apiKey: string) {
+    const apiKeyQuery = await findByApiKey(apiKey);
     return apiKeyQuery;
   }
 
@@ -24,11 +26,14 @@ export class CardServices {
   }
 
   verifyTypeCard(type: TransactionTypes): boolean {
-    const isValidType = typesCardSchemas.validate({ type }).error !== null;
+    const isValidType = typesCardSchemas.validate({ type }).error === undefined;
+
     return isValidType;
   }
 
   verifyEmployeeHaveTypeCard(type: TransactionTypes, employeeId: number) {
+    console.log("oi");
+
     const employeeByTypeAndId = findByTypeAndEmployeeId(type, employeeId);
     return employeeByTypeAndId;
   }
@@ -42,7 +47,7 @@ export class CardServices {
 
       if (i === 0 || i === cardholderNameSplited.length - 1)
         cardholderNameFormatted.push(name.toUpperCase());
-      if (name.length >= 3)
+      else if (name.length >= 3)
         cardholderNameFormatted.push(name.charAt(0).toUpperCase());
     }
 
@@ -71,12 +76,12 @@ export class CreateCardService extends CardServices {
     employeeId: number,
     type: TransactionTypes,
     nameEmployee: string,
-  ): CardInsertData {
+  ) {
     const { number, cvv } = this.createNumberAndCVV();
     const cardholderName = this.cardholderNameFormat(nameEmployee);
     const expirationDate = this.cardExpirationDateFormat();
-    
-    return {
+
+    insert({
       employeeId,
       number,
       type,
@@ -86,6 +91,6 @@ export class CreateCardService extends CardServices {
       isBlocked: false,
       isVirtual: false,
       originalCardId: undefined,
-    };
+    });
   }
 }
