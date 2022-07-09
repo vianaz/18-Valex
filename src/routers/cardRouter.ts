@@ -24,9 +24,9 @@ export class CardRouter {
       visualizeCard,
     } = this.cardController;
 
+    router.get("/createCard", createCard);
     router.get("/activeCard", activeCard);
     router.get("/blockCard", blockCard);
-    router.get("/createCard", createCard);
     router.get("/deleteCard", deleteCard);
     router.get("/visualizeAmount", visualizeAmount);
     router.get("/visualizeCard", visualizeCard);
