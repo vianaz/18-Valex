@@ -1,9 +1,11 @@
 import { faker } from "@faker-js/faker";
 import {
+  CardInsertData,
   findByTypeAndEmployeeId,
   TransactionTypes,
 } from "../repositories/cardRepository";
 import { findByApiKey } from "../repositories/companyRepository";
+import { findById } from "../repositories/employeeRepository";
 import { typesCardSchemas } from "../schemas/typesCardSchemas";
 import { encrypt } from "../utils/cryptographyUtils";
 import { sumYears } from "../utils/dayjsUtil";
@@ -11,51 +13,79 @@ import { sumYears } from "../utils/dayjsUtil";
 export class CardServices {
   private YEAR_VALID = 5;
 
-  apiKeyVerification(apiKey: string): boolean {
+  apiKeyVerification(apiKey: string) {
     const apiKeyQuery = findByApiKey(apiKey);
-    const haveOne = apiKeyQuery !== undefined;
-    return haveOne;
+    return apiKeyQuery;
   }
 
-  verifyTypeCard(type: string): boolean {
+  findEmployee(employeeId: number) {
+    const employee = findById(employeeId);
+    return employee;
+  }
+
+  verifyTypeCard(type: TransactionTypes): boolean {
     const isValidType = typesCardSchemas.validate({ type }).error !== null;
     return isValidType;
   }
 
-  verifyEmployeeHaveTypeCard(
-    type: TransactionTypes,
-    employeeId: number,
-  ): boolean {
-    const employeeAreadyHaveTypeCard =
-      findByTypeAndEmployeeId(type, employeeId) !== undefined;
-    return employeeAreadyHaveTypeCard;
+  verifyEmployeeHaveTypeCard(type: TransactionTypes, employeeId: number) {
+    const employeeByTypeAndId = findByTypeAndEmployeeId(type, employeeId);
+    return employeeByTypeAndId;
   }
 
-  cardHolderNameFormat(cardHolderName: string): string {
-    const cardHolderNameSplited = cardHolderName.split(" ");
-    const cardHolderNameFormatted = [];
+  cardholderNameFormat(cardholderName: string): string {
+    const cardholderNameSplited = cardholderName.split(" ");
+    const cardholderNameFormatted = [];
 
-    for (let i = 0; i < cardHolderNameSplited.length; i++) {
-      const name = cardHolderNameSplited[i];
+    for (let i = 0; i < cardholderNameSplited.length; i++) {
+      const name = cardholderNameSplited[i];
 
-      if (i === 0 || i === cardHolderNameSplited.length - 1)
-        cardHolderNameFormatted.push(name.toUpperCase());
+      if (i === 0 || i === cardholderNameSplited.length - 1)
+        cardholderNameFormatted.push(name.toUpperCase());
       if (name.length >= 3)
-        cardHolderNameFormatted.push(name.charAt(0).toUpperCase());
+        cardholderNameFormatted.push(name.charAt(0).toUpperCase());
     }
 
-    return cardHolderNameFormatted.join(" ");
+    return cardholderNameFormatted.join(" ");
   }
 
-  cardValidFormat(): string {
+  cardExpirationDateFormat(): string {
     return sumYears(new Date(), this.YEAR_VALID);
   }
 
-  createCardInfo(): { number: string; cvv: string } {
+  createNumberAndCVV(): { number: string; cvv: string } {
     const number = faker.finance.creditCardNumber("####-####-####-####");
     const cvv = faker.finance.creditCardCVV();
     const cryptCVV = encrypt(cvv);
 
     return { number, cvv: cryptCVV };
+  }
+}
+
+export class CreateCardService extends CardServices {
+  constructor() {
+    super();
+  }
+
+  buildCardInfo(
+    employeeId: number,
+    type: TransactionTypes,
+    nameEmployee: string,
+  ): CardInsertData {
+    const { number, cvv } = this.createNumberAndCVV();
+    const cardholderName = this.cardholderNameFormat(nameEmployee);
+    const expirationDate = this.cardExpirationDateFormat();
+    
+    return {
+      employeeId,
+      number,
+      type,
+      cardholderName,
+      securityCode: cvv,
+      expirationDate,
+      isBlocked: false,
+      isVirtual: false,
+      originalCardId: undefined,
+    };
   }
 }
