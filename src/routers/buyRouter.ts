@@ -2,20 +2,31 @@ import { Router } from "express";
 import { BuyController } from "../controllers/buyController";
 
 export class BuyRouter {
-  public router: Router;
+  public buyRouter: Router;
   protected buyController: BuyController;
 
   constructor() {
-    this.router = Router();
+    this.buyRouter = Router();
     this.buyController = new BuyController();
-    
-    this.routes();
+    new BuildRoutes();
+  }
+}
+
+class BuyRoute extends BuyRouter {
+  constructor() {
+    super();
+    this.buildRoute();
   }
 
-  routes() {
-    const router = this.router;
+  buildRoute() {
+    const cardRouter = this.buyRouter;
     const { buySomething } = this.buyController;
 
-    router.get("/buy", buySomething);
+    cardRouter.post("/buy", buySomething);
+  }
+}
+class BuildRoutes {
+  constructor() {
+    new BuyRoute();
   }
 }

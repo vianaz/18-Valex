@@ -13,20 +13,20 @@ export class Routers {
   constructor() {
     this.router = Router();
     this.cardRouter = new CardRouter();
-    this.buyRouter = new BuyRouter();
-    this.rechargeRouter = new RechargeRouter();
+    // this.buyRouter = new BuyRouter();
+    // this.rechargeRouter = new RechargeRouter();
 
-    this.routes();
+    this.buildroutes();
   }
 
-  routes() {
+  buildroutes() {
     const router = this.router;
-    const cardRouter = this.cardRouter;
-    const buyRouter = this.buyRouter;
-    const rechargeRouter = this.rechargeRouter;
+    const { cardRouter } = this.cardRouter;
+    // const { buyRouter } = this.buyRouter;
+    // const { rechargeRouter } = this.rechargeRouter;
 
-    router.use(cardRouter.router);
-    router.use(buyRouter.router);
-    router.use(rechargeRouter.router);
+    router.use(cardRouter);
+    // router.use(buyRouter);
+    // router.use(rechargeRouter.router);
   }
 }

@@ -7,10 +7,10 @@ export interface Company {
 }
 
 export async function findByApiKey(apiKey: string) {
-  const result = await connection.query<Company>(
-    `SELECT * FROM companies WHERE "apiKey"=$1`,
-    [apiKey]
-  );
+	const result = await connection.query<Company>(
+		"SELECT * FROM companies WHERE \"apiKey\"=$1",
+		[apiKey]
+	);
 
-  return result.rows[0];
+	return result.rows[0];
 }

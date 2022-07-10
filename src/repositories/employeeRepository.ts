@@ -8,11 +8,11 @@ export interface Employee {
   companyId: number;
 }
 
-export async function findById(id: number) {
-  const result = await connection.query<Employee, [number]>(
-    "SELECT * FROM employees WHERE id=$1",
-    [id]
-  );
+export async function findEmployeeById(id: number) {
+	const result = await connection.query<Employee, [number]>(
+		"SELECT * FROM employees WHERE id=$1",
+		[id]
+	);
 
-  return result.rows[0];
+	return result.rows[0];
 }
