@@ -8,12 +8,12 @@ interface MiddlewareProps {
 }
 
 const typeCardMiddleware = async ({ req, res, next }: MiddlewareProps) => {
-  const { typeCard } = req.body;
-  const { error } = typesCardSchemas.validate(typeCard);
+	const { typeCard } = req.body;
+	const { error } = typesCardSchemas.validate(typeCard);
 
-  if (error) {
-    return res.status(400).send("Invalid typeCard");
-  }
+	if (error) {
+		return res.status(400).send("Invalid typeCard");
+	}
 
-  next();
+	next();
 };

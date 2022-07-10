@@ -6,7 +6,7 @@ interface MethodsProps {
 }
 
 export class RechargeController {
-  addValue({ req, res }: MethodsProps) {
-    res.send("addValue");
-  }
+	addValue({ req, res }: MethodsProps) {
+		res.send("addValue");
+	}
 }

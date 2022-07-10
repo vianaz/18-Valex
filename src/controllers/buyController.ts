@@ -6,7 +6,7 @@ interface MethodsProps {
 }
 
 export class BuyController {
-  buySomething({ req, res }: MethodsProps) {
-    res.send("buySomething");
-  }
+	buySomething({ req, res }: MethodsProps) {
+		res.send("buySomething");
+	}
 }
