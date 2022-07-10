@@ -6,27 +6,23 @@ import { RechargeRouter } from "./rechargeRouter";
 
 export class Routers {
   public router: Router;
-  protected cardRouter: CardRouter;
+  protected cardRouter: Router;
   protected buyRouter: BuyRouter;
-  protected rechargeRouter: RechargeRouter;
+  protected rechargeRouter: Router;
 
   constructor() {
     this.router = Router();
-    this.cardRouter = new CardRouter();
+    this.cardRouter = new CardRouter().cardRouter;
+    this.rechargeRouter = new RechargeRouter().rechargeRouter;
     // this.buyRouter = new BuyRouter();
-    // this.rechargeRouter = new RechargeRouter();
 
-    this.buildroutes();
+    this.buildRoutes();
   }
 
-  buildroutes() {
-    const router = this.router;
-    const { cardRouter } = this.cardRouter;
-    // const { buyRouter } = this.buyRouter;
-    // const { rechargeRouter } = this.rechargeRouter;
-
+  buildRoutes() {
+    const { router, cardRouter, rechargeRouter } = this;
     router.use(cardRouter);
+    router.use(rechargeRouter);
     // router.use(buyRouter);
-    // router.use(rechargeRouter.router);
   }
 }

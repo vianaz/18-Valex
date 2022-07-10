@@ -2,13 +2,13 @@ import { Router } from "express";
 
 import { CardController } from "../controllers/cardController";
 import { activeCardMiddleware } from "../middlewares/activeCardMiddleware";
-import { apiKeyAndTypeMiddleware } from "../middlewares/apiKeyAndTypeMiddleware";
+import { apiKeyMiddleware } from "../middlewares/apiKeyMiddleware";
 import { applyMixins } from "../mixins";
 
 class CreateCardRoute {
   protected buildCreateRoute(router: Router, controller: CardController) {
     const { createCard } = controller;
-    router.post("/card", apiKeyAndTypeMiddleware, createCard);
+    router.post("/card", apiKeyMiddleware, createCard);
   }
 }
 class ActiveCardRoute {
