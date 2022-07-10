@@ -9,6 +9,7 @@ export class CardRouter {
 	protected cardController: CardController;
 
 	constructor() {
+
 		this.router = Router();
 		this.cardController = new CardController();
 
@@ -21,16 +22,16 @@ export class CardRouter {
 			activeCard,
 			blockCard,
 			createCard,
-			deleteCard,
+			unblockCard,
 			visualizeAmount,
 			visualizeCard,
 		} = this.cardController;
 
 		router.post("/card", apiKeyAndTypeMiddleware, createCard);
 		router.post("/card/:id/active", activeCardMiddleware, activeCard);
-		router.get("/blockCard", blockCard);
-		router.get("/deleteCard", deleteCard);
-		router.get("/visualizeAmount", visualizeAmount);
+		router.get("/card/amount/:id", visualizeAmount);
+		router.post("/card/:id/block", blockCard);
+		router.post("/card/:id/unblock", unblockCard);
 		router.get("/visualizeCard", visualizeCard);
 	}
 }

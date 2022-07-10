@@ -10,17 +10,18 @@ export class App {
 	constructor() {
 		this.app = express();
 		this.router = new Routers();
-		this.setConfig();
+		
+		this.middlewares();
 		this.routes();
 	}
 
-	setConfig() {
+	middlewares() {
 		this.app.use(json());
 		this.app.use(cors());
 	}
 	routes() {
-		const app = this.app;
 		const { router } = this.router;
-		app.use(router);
+		
+		this.app.use(router);
 	}
 }
