@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
-import { findCardById, TransactionTypes } from "../repositories/cardRepository";
+import { applyMixins } from "../mixins";
+import {
+  findCardById,
+  TransactionTypes,
+  update,
+} from "../repositories/cardRepository";
 import { findByCardId } from "../repositories/paymentRepository";
 
-import {
-  ActivateCardService,
-  CardServices,
-  CreateCardService,
-} from "../services/cardServices";
+import { CardServices, CreateCardService } from "../services/cardServices";
 
 interface CreateCardBody {
   cardType: TransactionTypes;
@@ -21,20 +22,22 @@ interface ReqParams {
   id: number;
 }
 
-// tentar enteder porque o constructor não tá funcionando
-export class CardController {
-  async createCard(req: Request, res: Response) {
-    const cardServices = new CardServices();
-    const createCardService = new CreateCardService();
+class CreateCard {
+  protected createServices: CardServices;
+  protected createCardService: CreateCardService;
 
-    const apiKey = req.headers["x-api-key"] as string;
+  constructor() {
+    this.createServices = new CardServices();
+    this.createCardService = new CreateCardService();
+  }
+
+  createCard = async (req: Request, res: Response) => {
+    const { createServices, createCardService } = this;
     const { cardType, employeeId }: CreateCardBody = req.body;
 
-    const employee = await cardServices.findEmployee(employeeId);
-    const employeeHaveTypeCard = await cardServices.verifyEmployeeHaveTypeCard(
-      cardType,
-      employeeId,
-    );
+    const employee = await createServices.findEmployee(employeeId);
+    const employeeHaveTypeCard =
+      await createServices.verifyEmployeeHaveTypeCard(cardType, employeeId);
 
     // refatorar esses if's depois
     if (employee === undefined || employeeHaveTypeCard) {
@@ -54,18 +57,23 @@ export class CardController {
 
     createCardService.buildCardInfo(employeeId, cardType, employee.fullName);
     res.status(201).send("card created with success");
-  }
+  };
+}
+class ActiveCard {
+  protected activeServices: CardServices;
 
-  async activeCard(
+  constructor() {
+    this.activeServices = new CardServices();
+  }
+  activeCard = async (
     req: Request<ReqParams, ActiveCardBody, ActiveCardBody>,
     res: Response,
-  ) {
-    const cardServices = new CardServices();
-    const cardActiveService = new ActivateCardService();
-
+  ) => {
+    const { activeServices } = this;
     const { id: cardId } = req.params;
     const { cvv, password } = req.body;
-    const isValidateToActive = await cardServices.validateCardActivation(
+
+    const isValidateToActive = await activeServices.validateCardActivation(
       cardId,
       cvv,
     );
@@ -74,55 +82,106 @@ export class CardController {
       return res.status(409).send("card is already activated"); // mudar depois para erro customizado
     }
 
-    cardActiveService.activateCard(cardId, password);
+    update(cardId, { password });
     res.status(200).send("card activated with success");
-  }
-  visualizeCard(req: Request, res: Response) {
-    res.send("visualizeCard");
-  }
-  async visualizeAmount(req: Request<ReqParams>, res: Response) {
+  };
+}
+class VisualizeAmount {
+  // visualizeCard(req: Request, res: Response) {
+  //   res.send("visualizeCard");
+  // }
+  visualizeAmount = async (req: Request<ReqParams>, res: Response) => {
     const { id } = req.params;
     const transitions = await findByCardId(id);
 
     console.log(transitions);
     res.send("visualizeAmount");
+  };
+}
+class BlockCard {
+  protected blockServices: CardServices;
+
+  constructor() {
+    this.blockServices = new CardServices();
   }
-  async blockCard(req: Request<ReqParams>, res: Response) {
+
+  blockCard = async (req: Request<ReqParams>, res: Response) => {
+    const { blockServices } = this;
     const { id } = req.params;
 
-    const cardService = new CardServices();
     const card = await findCardById(id);
 
     if (!card) {
       return res.status(404).send("card not found");
     }
 
-    const isBlocked = cardService.isBlockedCard(card);
-    const isExpiredCard = cardService.alreadyExpiredCard(card);
+    const isBlocked = blockServices.isBlockedCard(card);
+    const isExpiredCard = blockServices.alreadyExpiredCard(card);
 
     if (isBlocked || isExpiredCard) {
       return res.status(400).send("impossibel to block card");
     }
 
+    update(id, { isBlocked: true });
     res.send("card blocked with success");
+  };
+}
+class UnblockCard {
+  protected unblockServices: CardServices;
+
+  constructor() {
+    this.unblockServices = new CardServices();
   }
-  async unblockCard(req: Request<ReqParams>, res: Response) {
+
+  unblockCard = async (req: Request<ReqParams>, res: Response) => {
+    const { unblockServices } = this;
     const { id } = req.params;
 
-    const cardService = new CardServices();
     const card = await findCardById(id);
 
     if (!card) {
       return res.status(404).send("card not found");
     }
 
-    const isBlocked = cardService.isBlockedCard(card);
-    const isExpiredCard = cardService.alreadyExpiredCard(card);
+    const isBlocked = unblockServices.isBlockedCard(card);
+    const isExpiredCard = unblockServices.alreadyExpiredCard(card);
 
     if (!isBlocked || isExpiredCard) {
       return res.status(400).send("impossibel to unblock card");
     }
 
+    update(id, { isBlocked: false });
     res.send("card unblocked with success");
+  };
+}
+
+export class CardController {
+  public createCard;
+  public activeCard;
+  public visualizeAmount;
+  public blockCard;
+  public unblockCard;
+
+  constructor() {
+    this.createCard = new CreateCard().createCard;
+    this.activeCard = new ActiveCard().activeCard;
+    this.visualizeAmount = new VisualizeAmount().visualizeAmount;
+    this.blockCard = new BlockCard().blockCard;
+    this.unblockCard = new UnblockCard().unblockCard;
   }
 }
+
+export interface CardController
+  extends CreateCard,
+    ActiveCard,
+    VisualizeAmount,
+    BlockCard,
+    UnblockCard {}
+
+applyMixins(CardController, [
+  CreateCard,
+  ActiveCard,
+  VisualizeAmount,
+  BlockCard,
+  UnblockCard,
+]);

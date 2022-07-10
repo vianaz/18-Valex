@@ -124,9 +124,3 @@ export class CreateCardService extends CardServices {
     });
   }
 }
-
-export class ActivateCardService extends CardServices {
-  activateCard(id: number, password: string) {
-    update(id, { password });
-  }
-}

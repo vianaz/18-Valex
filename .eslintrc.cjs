@@ -13,6 +13,5 @@ module.exports = {
   rules: {
     quotes: ["error", "double"],
     semi: ["error", "always"],
-    "no-explict-any": "off",
   },
 };
