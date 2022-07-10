@@ -1,17 +1,6 @@
 import { Router } from "express";
 import { BuyController } from "../controllers/buyController";
 
-export class BuyRouter {
-  public buyRouter: Router;
-  protected buyController: BuyController;
-
-  constructor() {
-    this.buyRouter = Router();
-    this.buyController = new BuyController();
-    new BuildRoutes();
-  }
-}
-
 class BuyRoute extends BuyRouter {
   constructor() {
     super();
@@ -25,8 +14,13 @@ class BuyRoute extends BuyRouter {
     cardRouter.post("/buy", buySomething);
   }
 }
-class BuildRoutes {
+export class BuyRouter {
+  public buyRouter: Router;
+  protected buyController: BuyController;
+
   constructor() {
-    new BuyRoute();
+    this.buyRouter = Router();
+    this.buyController = new BuyController();
+    new BuildRoutes();
   }
 }
