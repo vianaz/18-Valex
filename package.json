@@ -9,7 +9,8 @@
   "scripts": {
     "start": "ts-node -r dotenv/config src/server.ts",
     "dev": "tsnd --transpile-only --respawn --ignore-watch node_modules -r dotenv/config src/server.ts",
-    "test": "jest"
+    "test": "jest",
+    "studio": "prisma studio"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

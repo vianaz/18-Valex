@@ -5,7 +5,7 @@ import { CardServices } from "../services/cardServices";
 interface ModelParams {
   id: number;
 }
-export class RechargeController {
+class RechargeValue {
   private cardService: CardServices;
 
   constructor() {
@@ -32,4 +32,11 @@ export class RechargeController {
     insert({ cardId: id, amount: value });
     res.send("recharge done with success");
   };
+}
+export class RechargeController {
+  public rechargeValue;
+
+  constructor() {
+    this.rechargeValue = new RechargeValue().rechargeValue;
+  }
 }

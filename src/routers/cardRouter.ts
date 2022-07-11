@@ -45,7 +45,7 @@ export class CardRouter {
     this.buildRouter();
   }
 
-  buildRouter() {
+  private buildRouter() {
     this.buildCreateRoute(this.cardRouter, this.cardController);
     this.buildActiveRoute(this.cardRouter, this.cardController);
     this.buildVisualizeRoute(this.cardRouter, this.cardController);
