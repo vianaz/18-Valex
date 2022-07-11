@@ -12,7 +12,8 @@ class CheckSignUpCard {
 }
 class CheckActivedCard {
   verifyIfIsActiveCard(card: Card): boolean {
-    return card.password !== null ? true : false;
+
+    return card.password !== null;
   }
 }
 class CheckExpiredCard {
