@@ -58,8 +58,8 @@ model cards {
 model payments {
   id          Int      @id @default(autoincrement())
   cardId      Int
-  bussinessId Int
-  timestamp   DateTime
+  businessId Int
+  timestamp   DateTime @default(now())
   amount      Int
 
   card cards @relation(fields: [cardId], references: [id])
