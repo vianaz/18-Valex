@@ -28,6 +28,10 @@
 - Activate / Block / Unblock a card
 - Recharges a card
 - Make card payments
+## Lessons Learned
+
+In this project I learned a lot about how to structure an API with TypeScript. Also mocks/tests API and SOLID 
+principle.
 
 </br>
 
@@ -73,26 +77,26 @@
 ### Activate a card
 
 ```http
-  PUT /card/:cardId/activate
+  POST /card/:cardId/activate
 ```
 
 #### Request:
 
 | Body       | Type     | Description                  |
 | :--------- | :------- | :--------------------------- |
-| `cvc`      | `string` | **Required**. card cvc       |
+| `cvv`      | `string` | **Required**. card cvc       |
 | `password` | `string` | **Required**. user full name |
 
 `Password max length: 4`
 
-`Cvc max length: 3`
+`Cvv max length: 3`
 
 #
 
 ### Block a card
 
 ```http
-  PUT /card/:cardId/block
+  POST /card/:cardId/block
 ```
 
 #### Request:
@@ -106,7 +110,7 @@
 ### Unblock a card
 
 ```http
-  PUT /card/:id/unblock
+  POST /card/:id/unblock
 ```
 
 #### Request:
@@ -151,12 +155,6 @@
 
 ####
 
-| Params       | Type      | Description               |
-| :----------- | :-------- | :------------------------ |
-| `businessId` | `integer` | **Required**. business Id |
-
-####
-
 | Body             | Type      | Description                        |
 | :--------------- | :-------- | :--------------------------------- |
 | `password`       | `string`  | **Required**. card password        |
@@ -184,13 +182,21 @@ To run this project, you will need to add the following environment variables to
 Clone the project
 
 ```bash
+<<<<<<< HEAD
   git clone https://github.com/vianaz/projeto18-valex
+=======
+  git clone https://github.com/vianaz/18-Valex
+>>>>>>> f1c238a3b019d56e7b07a3d0e9933fcfa3f46378
 ```
 
 Go to the project directory
 
 ```bash
+<<<<<<< HEAD
   cd projeto18-valex/
+=======
+  cd 18-Valex/
+>>>>>>> f1c238a3b019d56e7b07a3d0e9933fcfa3f46378
 ```
 
 Install dependencies
@@ -221,6 +227,7 @@ Start the server
 
 </br>
 
+<<<<<<< HEAD
 ## Lessons Learned
 
 In this project I learned a lot about how to structure an API with TypeScript
@@ -233,6 +240,8 @@ In this project I learned a lot about how to structure an API with TypeScript
 - [Awesome README](https://github.com/matiassingers/awesome-readme)
 - [How to write a Good readme](https://bulldogjob.com/news/449-how-to-write-a-good-readme-for-your-github-project)
 
+=======
+>>>>>>> f1c238a3b019d56e7b07a3d0e9933fcfa3f46378
 </br>
 
 ## Authors
