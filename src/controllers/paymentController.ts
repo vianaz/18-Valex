@@ -39,7 +39,6 @@ class Buy {
 
     const verifyValidation: ErrorTypes =
       (!verifyIfIsSignUpCard(card) && "error_card_not_found") ||
-      (!verifyIfIsActiveCard(card) && "error_active_card") ||
       (verifyIfIsExpiredCard(card) && "error_expired_card") ||
       (verifyIfIsBlockedCard(card) && "error_card_blocked") ||
       (!isPasswordCorrect(card, password) && "error_invalid_password") ||

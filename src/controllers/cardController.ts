@@ -13,6 +13,7 @@ import { CardServices } from "../services/cardServices";
 import { PaymentServices } from "../services/paymentServices";
 import {
   isPasswordCorrect,
+  verifyIfIsActiveCard,
   verifyIfIsBlockedCard,
   verifyIfIsExpiredCard,
 } from "../utils/cardVerificationUtils";
@@ -131,12 +132,14 @@ class BlockCard {
     const isBlocked = verifyIfIsBlockedCard(card);
     const isExpiredCard = verifyIfIsExpiredCard(card);
     const isCorrectPassword = isPasswordCorrect(card, password);
+    const isActivate = verifyIfIsActiveCard(card);
 
     if (isBlocked || isExpiredCard || !isCorrectPassword) {
       const errorMessage =
         (isBlocked && "error_card_blocked") ||
         (isExpiredCard && "error_expired_card") ||
         (!isCorrectPassword && "error_invalid_password");
+        
       throw errorFactoryUtils(errorMessage);
     }
 

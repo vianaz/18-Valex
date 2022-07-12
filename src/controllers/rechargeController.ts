@@ -3,6 +3,7 @@ import { findCardById } from "../repositories/cardRepository";
 import { insert } from "../repositories/rechargeRepository";
 import { CardServices } from "../services/cardServices";
 import {
+  verifyIfIsActiveCard,
   verifyIfIsBlockedCard,
   verifyIfIsExpiredCard,
 } from "../utils/cardVerificationUtils";
@@ -29,11 +30,13 @@ class RechargeValue {
 
     const isExpiredCard = verifyIfIsExpiredCard(card);
     const isBlocked = verifyIfIsBlockedCard(card);
+    const isActivate = verifyIfIsActiveCard(card);
 
-    if (isExpiredCard || isBlocked) {
-      const errorMessage = isExpiredCard
-        ? "error_expired_card"
-        : "error_card_blocked";
+    if (isExpiredCard || isBlocked || !isActivate) {
+      const errorMessage =
+        (isExpiredCard && "error_expired_card") ||
+        (isBlocked && "error_card_blocked") ||
+        "";
       throw errorFactoryUtils(errorMessage);
     }
 

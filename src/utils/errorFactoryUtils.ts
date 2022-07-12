@@ -40,10 +40,10 @@ export const errorFactoryUtils = (typeError: ErrorTypes) => {
       return { type: "error_card_not_found", message: "Card not found" };
 
     case "error_card_blocked":
-      return { type: "error_card_blocked", message: "Card blocked" };
+      return { type: "error_card_blocked", message: "Card already blocked" };
 
     case "error_card_unblocked":
-      return { type: "error_card_unblocked", message: "Card unblocked" };
+      return { type: "error_card_unblocked", message: "Card already unblocked" };
 
     case "error_business_not_found":
       return {
