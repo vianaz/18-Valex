@@ -3,7 +3,6 @@ import { Business } from "../repositories/businessRepository";
 import { Card } from "../repositories/cardRepository";
 import { findByCardId } from "../repositories/paymentRepository";
 import { findByCardRechargeId } from "../repositories/rechargeRepository";
-import { isAfterDate } from "../utils/dayjsUtil";
 
 class BussinessCheck {
   isBussiness(business: Business): boolean {
@@ -14,7 +13,7 @@ class BussinessCheck {
   }
 }
 class CheckBalance {
-  async isBalanceEnough(card: Card, amount: number): Promise<boolean> {
+  async calculeBalance(card: Card): Promise<number> {
     const { id } = card;
     const recharges = await findByCardRechargeId(id);
     const payment = await findByCardId(id);
@@ -23,20 +22,20 @@ class CheckBalance {
     const sumPayments = payment.reduce((acc, cur) => acc + cur.amount, 0);
     const balance = sumRecharges - sumPayments;
 
-    return balance >= amount;
+    return balance;
   }
 }
 
 export class PaymentServices {
   public isBussiness: any;
   public isBussinesTypeEqualCardType: any;
-  public isBalanceEnough: any;
+  public calculeBalance: any;
 
   constructor() {
     this.isBussinesTypeEqualCardType =
       new BussinessCheck().isBussinesTypeEqualCardType;
     this.isBussiness = new BussinessCheck().isBussiness;
-    this.isBalanceEnough = new CheckBalance().isBalanceEnough;
+    this.calculeBalance = new CheckBalance().calculeBalance;
   }
 }
 

@@ -6,7 +6,6 @@ import {
   TransactionTypes,
   findCardById,
   update,
-  Card,
 } from "../repositories/cardRepository";
 import { typesCardSchemas } from "../schemas/validateSchemas";
 import { decrypt, encrypt } from "../utils/cryptographyUtils";

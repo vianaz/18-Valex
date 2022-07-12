@@ -6,9 +6,11 @@ import {
   update,
 } from "../repositories/cardRepository";
 import { findEmployeeById } from "../repositories/employeeRepository";
-import { findByCardId } from "../repositories/paymentRepository";
+import * as paymentRepository from "../repositories/paymentRepository";
+import * as rechargeRepository from "../repositories/rechargeRepository";
 
 import { CardServices } from "../services/cardServices";
+import { PaymentServices } from "../services/paymentServices";
 import {
   isPasswordCorrect,
   verifyIfIsBlockedCard,
@@ -109,12 +111,25 @@ class ActiveCard {
   };
 }
 class VisualizeAmount {
-  visualizeAmount = async (req: Request<ReqParams>, res: Response) => {
-    const { id } = req.params;
-    const transitions = await findByCardId(id);
+  private visualizeService: PaymentServices;
 
-    console.log(transitions);
-    res.send("visualizeAmount");
+  constructor() {
+    this.visualizeService = new PaymentServices();
+  }
+  visualizeAmount = async (req: Request<ReqParams>, res: Response) => {
+    const { visualizeService } = this;
+    const { id } = req.params;
+    const card = await findCardById(id);
+    const transactions = await paymentRepository.findByCardId(id);
+    const recharges = await rechargeRepository.findByCardRechargeId(id);
+
+    if (!card) {
+      return res.status(404).send("card not found");
+    }
+    const balance = await visualizeService.calculeBalance(card);
+    console.log(balance, transactions, recharges);
+
+    res.send({ balance, transactions, recharges });
   };
 }
 class BlockCard {

@@ -45,7 +45,7 @@ class Buy {
       (!paymentService.isBussiness(businessId) && "business don't found") ||
       (!paymentService.isBussinesTypeEqualCardType(business, card) &&
         "you just can use your card when business type is the same of your card") ||
-      (!(await paymentService.isBalanceEnough(card, amount)) &&
+      (!((await paymentService.calculeBalance(card)) >= amount) &&
         "your balance is not enough");
 
     if (verifyValidation) {

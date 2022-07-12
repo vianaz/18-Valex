@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 import { connection } from "../db/database";
 
 export interface Recharge {

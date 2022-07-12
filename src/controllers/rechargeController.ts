@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { find, findCardById } from "../repositories/cardRepository";
+import { findCardById } from "../repositories/cardRepository";
 import { insert } from "../repositories/rechargeRepository";
 import { CardServices } from "../services/cardServices";
 import {
