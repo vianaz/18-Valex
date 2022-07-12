@@ -182,21 +182,16 @@ To run this project, you will need to add the following environment variables to
 Clone the project
 
 ```bash
-<<<<<<< HEAD
   git clone https://github.com/vianaz/projeto18-valex
-=======
   git clone https://github.com/vianaz/18-Valex
->>>>>>> f1c238a3b019d56e7b07a3d0e9933fcfa3f46378
 ```
 
 Go to the project directory
 
 ```bash
-<<<<<<< HEAD
   cd projeto18-valex/
 =======
   cd 18-Valex/
->>>>>>> f1c238a3b019d56e7b07a3d0e9933fcfa3f46378
 ```
 
 Install dependencies
