@@ -11,7 +11,7 @@ export const apiKeyMiddleware = async (
 
   if (apiKeyQuery === undefined) {
     const typeError = {
-      stutsCode: 401,
+      stutsCode: 422,
       message: "not exist this api key",
     };
     return res.status(typeError.stutsCode).send(typeError.message);

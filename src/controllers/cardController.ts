@@ -16,6 +16,7 @@ import {
   verifyIfIsBlockedCard,
   verifyIfIsExpiredCard,
 } from "../utils/cardVerificationUtils";
+import { errorFactoryUtils } from "../utils/errorFactoryUtils";
 
 interface CreateCardBody {
   cardType: TransactionTypes;
@@ -49,17 +50,10 @@ class CreateCard {
 
     if (employee === undefined || employeeHaveTypeCard) {
       // refatorar para novo formato de erro
-      const typeError =
-        (employee === undefined && {
-          stutsCode: 404,
-          message: "not exist this employee",
-        }) ||
-        (employeeHaveTypeCard && {
-          stutsCode: 409,
-          message: "employee have this type",
-        });
-
-      return res.status(typeError.stutsCode).send(typeError.message);
+      const typeError = employeeHaveTypeCard
+        ? "error_employee_have_type_card"
+        : "employee_not_found";
+      throw errorFactoryUtils(typeError);
     }
 
     const { cardNumber, cardCVV, cardholderName, expirationDate } =
@@ -97,14 +91,7 @@ class ActiveCard {
     const { id: cardId } = req.params;
     const { cvv, password } = req.body;
 
-    const isValidateToActive = await activeService.validateCardActivation(
-      cardId,
-      cvv,
-    );
-
-    if (isValidateToActive.status) {
-      return res.status(409).send(isValidateToActive.message); // mudar depois para erro customizado
-    }
+    await activeService.validateCardActivation(cardId, cvv);
 
     activeService.insertPassword(cardId, password);
     res.status(201).send("card activated with success");
@@ -124,10 +111,10 @@ class VisualizeAmount {
     const recharges = await rechargeRepository.findByCardRechargeId(id);
 
     if (!card) {
-      return res.status(404).send("card not found");
+      throw errorFactoryUtils("error_card_not_found");
     }
+
     const balance = await visualizeService.calculeBalance(card);
-    console.log(balance, transactions, recharges);
 
     res.send({ balance, transactions, recharges });
   };
@@ -139,21 +126,18 @@ class BlockCard {
 
     const card = await findCardById(id);
 
-    if (!card) {
-      return res.status(404).send("card not found");
-    }
+    if (!card) throw errorFactoryUtils("error_card_not_found");
 
     const isBlocked = verifyIfIsBlockedCard(card);
     const isExpiredCard = verifyIfIsExpiredCard(card);
     const isCorrectPassword = isPasswordCorrect(card, password);
-    console.log(isBlocked, isExpiredCard, isCorrectPassword);
 
     if (isBlocked || isExpiredCard || !isCorrectPassword) {
       const errorMessage =
-        (isBlocked && "card is already blocked") ||
-        (isExpiredCard && "card is expired") ||
-        (!isCorrectPassword && "password is incorrect");
-      return res.status(400).send(errorMessage);
+        (isBlocked && "error_card_blocked") ||
+        (isExpiredCard && "error_expired_card") ||
+        (!isCorrectPassword && "error_invalid_password");
+      throw errorFactoryUtils(errorMessage);
     }
 
     update(id, { isBlocked: true });
@@ -167,9 +151,7 @@ class UnblockCard {
 
     const card = await findCardById(id);
 
-    if (!card) {
-      return res.status(404).send("card not found");
-    }
+    if (!card) throw errorFactoryUtils("error_card_not_found");
 
     const isBlocked = verifyIfIsBlockedCard(card);
     const isExpiredCard = verifyIfIsExpiredCard(card);
@@ -177,10 +159,10 @@ class UnblockCard {
 
     if (!isBlocked || isExpiredCard || !isCorrectPassword) {
       const errorMessage =
-        (!isBlocked && "card is already unblocked") ||
-        (isExpiredCard && "card is expired") ||
-        (!isCorrectPassword && "password is incorrect");
-      return res.status(400).send(errorMessage);
+        (!isBlocked && "error_card_unblocked") ||
+        (isExpiredCard && "error_expired_card") ||
+        (!isCorrectPassword && "error_invalid_password");
+      throw errorFactoryUtils(errorMessage);
     }
 
     update(id, { isBlocked: false });

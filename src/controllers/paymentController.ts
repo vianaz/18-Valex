@@ -11,6 +11,7 @@ import {
   verifyIfIsExpiredCard,
   verifyIfIsSignUpCard,
 } from "../utils/cardVerificationUtils";
+import { errorFactoryUtils, ErrorTypes } from "../utils/errorFactoryUtils";
 
 interface IParams {
   id: number;
@@ -36,20 +37,20 @@ class Buy {
     const card = await findCardById(cardId);
     const business = await findById(businessId);
 
-    const verifyValidation =
-      (!verifyIfIsSignUpCard(card) && "card don't found") ||
-      (!verifyIfIsActiveCard(card) && "please, active your card") ||
-      (verifyIfIsExpiredCard(card) && "this card is expired") ||
-      (verifyIfIsBlockedCard(card) && "this card is blocked") ||
-      (!isPasswordCorrect(card, password) && "your password is wrong") ||
-      (!paymentService.isBussiness(businessId) && "business don't found") ||
+    const verifyValidation: ErrorTypes =
+      (!verifyIfIsSignUpCard(card) && "error_card_not_found") ||
+      (!verifyIfIsActiveCard(card) && "error_active_card") ||
+      (verifyIfIsExpiredCard(card) && "error_expired_card") ||
+      (verifyIfIsBlockedCard(card) && "error_card_blocked") ||
+      (!isPasswordCorrect(card, password) && "error_invalid_password") ||
+      (!paymentService.isBussiness(businessId) && "error_business_not_found") ||
       (!paymentService.isBussinesTypeEqualCardType(business, card) &&
-        "you just can use your card when business type is the same of your card") ||
+        "error_business_type_different_from_card") ||
       (!((await paymentService.calculeBalance(card)) >= amount) &&
-        "your balance is not enough");
+        "error_balance_insufficient");
 
     if (verifyValidation) {
-      return res.status(400).send(verifyValidation);
+      throw errorFactoryUtils(verifyValidation);
     }
     insert({ cardId, amount, businessId });
     res.send("ok");
