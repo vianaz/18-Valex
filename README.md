@@ -169,7 +169,7 @@ To run this project, you will need to add the following environment variables to
 
 `DATABASE_URL = postgres://UserName:Password@Hostname:5432/DatabaseName`
 
-`PROD_MODE = boolean #recommended:false`
+`PROD = boolean #recommended:false`
 
 `PORT = number #recommended:5000`
 
