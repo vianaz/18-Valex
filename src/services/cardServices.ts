@@ -10,6 +10,7 @@ import {
 import { typesCardSchemas } from "../schemas/validateSchemas";
 import { decrypt, encrypt } from "../utils/cryptographyUtils";
 import { isAfterDate, sumYears } from "../utils/dayjsUtil";
+import { errorFactoryUtils } from "../utils/errorFactoryUtils";
 
 interface IActiveReturn {
   status: boolean;
@@ -54,13 +55,10 @@ class HandlerCardData {
   }
 }
 class HandlerCardActivation {
-  async validateCardActivation(
-    id: number,
-    cvv: string,
-  ): Promise<IActiveReturn | boolean> {
+  async validateCardActivation(id: number, cvv: string) {
     const card = await findCardById(id);
 
-    if (!card) return { status: true, message: "not exist this card" };
+    if (!card) throw errorFactoryUtils("error_card_not_found");
 
     const isAfterExpirationDate = isAfterDate(card.expirationDate);
     const isAlreadyActivated = card.password !== null;
@@ -68,12 +66,11 @@ class HandlerCardActivation {
 
     if (isAfterExpirationDate || isAlreadyActivated || cvvIsInvalid) {
       const message =
-        (isAfterExpirationDate && "this card is expired") ||
-        (isAlreadyActivated && "this card is already activated") ||
-        (cvvIsInvalid && "cvv is invalid");
-      return { status: true, message };
+        (isAfterExpirationDate && "error_expired_card") ||
+        (isAlreadyActivated && "error_active_card") ||
+        (cvvIsInvalid && "error_invalid_cvv");
+      throw errorFactoryUtils(message);
     }
-    return true;
   }
   insertPassword(id: number, password: string) {
     const cryptPassword = encrypt(password);

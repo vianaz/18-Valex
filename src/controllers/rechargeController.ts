@@ -6,6 +6,7 @@ import {
   verifyIfIsBlockedCard,
   verifyIfIsExpiredCard,
 } from "../utils/cardVerificationUtils";
+import { errorFactoryUtils } from "../utils/errorFactoryUtils";
 
 interface ModelParams {
   id: number;
@@ -23,7 +24,7 @@ class RechargeValue {
     const card = await findCardById(id);
 
     if (!card) {
-      return res.status(409).send("card not found");
+      throw errorFactoryUtils("error_card_not_found");
     }
 
     const isExpiredCard = verifyIfIsExpiredCard(card);
@@ -31,9 +32,9 @@ class RechargeValue {
 
     if (isExpiredCard || isBlocked) {
       const errorMessage = isExpiredCard
-        ? "this card is expired"
-        : "this card is blocked";
-      return res.status(400).send(errorMessage);
+        ? "error_expired_card"
+        : "error_card_blocked";
+      throw errorFactoryUtils(errorMessage);
     }
 
     insert({ cardId: id, amount: value });
