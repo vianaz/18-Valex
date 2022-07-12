@@ -227,21 +227,10 @@ Start the server
 
 </br>
 
-<<<<<<< HEAD
 ## Lessons Learned
 
 In this project I learned a lot about how to structure an API with TypeScript
 
-</br>
-
-## Acknowledgements
-
-- [Awesome Readme Templates](https://awesomeopensource.com/project/elangosundar/awesome-README-templates)
-- [Awesome README](https://github.com/matiassingers/awesome-readme)
-- [How to write a Good readme](https://bulldogjob.com/news/449-how-to-write-a-good-readme-for-your-github-project)
-
-=======
->>>>>>> f1c238a3b019d56e7b07a3d0e9933fcfa3f46378
 </br>
 
 ## Authors
