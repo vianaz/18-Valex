@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
 import { Router } from "express";
 import { RechargeController } from "../controllers/rechargeController";
 import { apiKeyMiddleware } from "../middlewares/apiKeyMiddleware";

@@ -3,34 +3,7 @@ import { Business } from "../repositories/businessRepository";
 import { Card } from "../repositories/cardRepository";
 import { findByCardId } from "../repositories/paymentRepository";
 import { findByCardRechargeId } from "../repositories/rechargeRepository";
-import { isAfterDate } from "../utils/dayjsUtil";
 
-class CheckSignUpCard {
-  verifyIfIsSignUpCard(card: Card): boolean {
-    return card ? true : false;
-  }
-}
-class CheckActivedCard {
-  verifyIfIsActiveCard(card: Card): boolean {
-    return card.password !== null ? true : false;
-  }
-}
-class CheckExpiredCard {
-  verifyIfIsExpiredCard(card: Card): boolean {
-    const isAfterExpirationDate = isAfterDate(card.expirationDate);
-    return isAfterExpirationDate;
-  }
-}
-class CheckBlockedCard {
-  verifyIfIsBlockedCard(card: Card): boolean {
-    return card.isBlocked;
-  }
-}
-class CheckPasswordCard {
-  isPasswordCorrect(card: Card, password: string): boolean {
-    return card.password === password;
-  }
-}
 class BussinessCheck {
   isBussiness(business: Business): boolean {
     return business ? true : false;
@@ -40,7 +13,7 @@ class BussinessCheck {
   }
 }
 class CheckBalance {
-  async isBalanceEnough(card: Card, amount: number): Promise<boolean> {
+  async calculeBalance(card: Card): Promise<number> {
     const { id } = card;
     const recharges = await findByCardRechargeId(id);
     const payment = await findByCardId(id);
@@ -48,47 +21,23 @@ class CheckBalance {
     const sumRecharges = recharges.reduce((acc, cur) => acc + cur.amount, 0);
     const sumPayments = payment.reduce((acc, cur) => acc + cur.amount, 0);
     const balance = sumRecharges - sumPayments;
-    console.log(balance >= amount);
 
-    return balance >= amount;
+    return balance;
   }
 }
 
 export class PaymentServices {
-  public verifyIfIsSignUpCard: any;
-  public verifyIfIsActiveCard: any;
-  public verifyIfIsExpiredCard: any;
-  public verifyIfIsBlockedCard: any;
-  public checkPasswordCard: any;
   public isBussiness: any;
   public isBussinesTypeEqualCardType: any;
-  public isBalanceEnough: any;
+  public calculeBalance: any;
 
   constructor() {
-    this.verifyIfIsSignUpCard = new CheckSignUpCard().verifyIfIsSignUpCard;
-    this.verifyIfIsActiveCard = new CheckActivedCard().verifyIfIsActiveCard;
-    this.verifyIfIsExpiredCard = new CheckExpiredCard().verifyIfIsExpiredCard;
-    this.verifyIfIsBlockedCard = new CheckBlockedCard().verifyIfIsBlockedCard;
-    this.checkPasswordCard = new CheckPasswordCard().isPasswordCorrect;
     this.isBussinesTypeEqualCardType =
       new BussinessCheck().isBussinesTypeEqualCardType;
     this.isBussiness = new BussinessCheck().isBussiness;
-    this.isBalanceEnough = new CheckBalance().isBalanceEnough;
+    this.calculeBalance = new CheckBalance().calculeBalance;
   }
 }
 
-export interface PaymentServices
-  extends CheckSignUpCard,
-    CheckActivedCard,
-    CheckExpiredCard,
-    CheckBlockedCard,
-    BussinessCheck,
-    CheckPasswordCard {}
-applyMixins(PaymentServices, [
-  CheckSignUpCard,
-  CheckActivedCard,
-  CheckExpiredCard,
-  CheckBlockedCard,
-  BussinessCheck,
-  CheckPasswordCard,
-]);
+export interface PaymentServices extends BussinessCheck, CheckBalance {}
+applyMixins(PaymentServices, [BussinessCheck, CheckBalance]);

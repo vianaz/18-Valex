@@ -9,3 +9,4 @@ export const encrypt = (text: string): string => {
 export const decrypt = (text: string): string => {
 	return cryptr.decrypt(text);
 };
+

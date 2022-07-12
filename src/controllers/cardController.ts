@@ -5,9 +5,17 @@ import {
   TransactionTypes,
   update,
 } from "../repositories/cardRepository";
-import { findByCardId } from "../repositories/paymentRepository";
+import { findEmployeeById } from "../repositories/employeeRepository";
+import * as paymentRepository from "../repositories/paymentRepository";
+import * as rechargeRepository from "../repositories/rechargeRepository";
 
-import { CardServices, CreateCardService } from "../services/cardServices";
+import { CardServices } from "../services/cardServices";
+import { PaymentServices } from "../services/paymentServices";
+import {
+  isPasswordCorrect,
+  verifyIfIsBlockedCard,
+  verifyIfIsExpiredCard,
+} from "../utils/cardVerificationUtils";
 
 interface CreateCardBody {
   cardType: TransactionTypes;
@@ -23,23 +31,22 @@ interface ReqParams {
 }
 
 class CreateCard {
-  protected createServices: CardServices;
-  protected createCardService: CreateCardService;
+  protected cardService: CardServices;
 
   constructor() {
-    this.createServices = new CardServices();
-    this.createCardService = new CreateCardService();
+    this.cardService = new CardServices();
   }
 
   createCard = async (req: Request, res: Response) => {
-    const { createServices, createCardService } = this;
+    const { cardService } = this;
     const { cardType, employeeId }: CreateCardBody = req.body;
 
-    const employee = await createServices.findEmployee(employeeId);
-    const employeeHaveTypeCard =
-      await createServices.verifyEmployeeHaveTypeCard(cardType, employeeId);
+    const employee = await findEmployeeById(employeeId);
+    const employeeHaveTypeCard = await cardService.employeeAlreadyHaveTypeCard(
+      cardType,
+      employeeId,
+    );
 
-    // refatorar esses if's depois
     if (employee === undefined || employeeHaveTypeCard) {
       // refatorar para novo formato de erro
       const typeError =
@@ -55,59 +62,80 @@ class CreateCard {
       return res.status(typeError.stutsCode).send(typeError.message);
     }
 
-    createCardService.buildCardInfo(employeeId, cardType, employee.fullName);
-    res.status(201).send("card created with success");
+    const { cardNumber, cardCVV, cardholderName, expirationDate } =
+      cardService.buildCardInfos(employee.fullName);
+
+    cardService.insertCard({
+      cardCVV,
+      employeeId,
+      cardholderName,
+      number: cardNumber,
+      type: cardType,
+      expirationDate,
+    });
+
+    res.status(201).send({
+      cardholderName,
+      number: cardNumber,
+      cvv: cardCVV,
+      expirationDate,
+      type: cardType,
+    });
   };
 }
 class ActiveCard {
-  protected activeServices: CardServices;
+  protected activeService: CardServices;
 
   constructor() {
-    this.activeServices = new CardServices();
+    this.activeService = new CardServices();
   }
   activeCard = async (
     req: Request<ReqParams, ActiveCardBody, ActiveCardBody>,
     res: Response,
   ) => {
-    const { activeServices } = this;
+    const { activeService } = this;
     const { id: cardId } = req.params;
     const { cvv, password } = req.body;
 
-    const isValidateToActive = await activeServices.validateCardActivation(
+    const isValidateToActive = await activeService.validateCardActivation(
       cardId,
       cvv,
     );
 
-    if (!isValidateToActive) {
-      return res.status(409).send("card is already activated"); // mudar depois para erro customizado
+    if (isValidateToActive.status) {
+      return res.status(409).send(isValidateToActive.message); // mudar depois para erro customizado
     }
 
-    update(cardId, { password });
-    res.status(200).send("card activated with success");
+    activeService.insertPassword(cardId, password);
+    res.status(201).send("card activated with success");
   };
 }
 class VisualizeAmount {
-  // visualizeCard(req: Request, res: Response) {
-  //   res.send("visualizeCard");
-  // }
-  visualizeAmount = async (req: Request<ReqParams>, res: Response) => {
-    const { id } = req.params;
-    const transitions = await findByCardId(id);
+  private visualizeService: PaymentServices;
 
-    console.log(transitions);
-    res.send("visualizeAmount");
+  constructor() {
+    this.visualizeService = new PaymentServices();
+  }
+  visualizeAmount = async (req: Request<ReqParams>, res: Response) => {
+    const { visualizeService } = this;
+    const { id } = req.params;
+    const card = await findCardById(id);
+    const transactions = await paymentRepository.findByCardId(id);
+    const recharges = await rechargeRepository.findByCardRechargeId(id);
+
+    if (!card) {
+      return res.status(404).send("card not found");
+    }
+    const balance = await visualizeService.calculeBalance(card);
+    console.log(balance, transactions, recharges);
+
+    res.send({ balance, transactions, recharges });
   };
 }
 class BlockCard {
-  protected blockServices: CardServices;
-
-  constructor() {
-    this.blockServices = new CardServices();
-  }
-
   blockCard = async (req: Request<ReqParams>, res: Response) => {
-    const { blockServices } = this;
     const { id } = req.params;
+    const { password } = req.body;
 
     const card = await findCardById(id);
 
@@ -115,11 +143,17 @@ class BlockCard {
       return res.status(404).send("card not found");
     }
 
-    const isBlocked = blockServices.isBlockedCard(card);
-    const isExpiredCard = blockServices.alreadyExpiredCard(card);
+    const isBlocked = verifyIfIsBlockedCard(card);
+    const isExpiredCard = verifyIfIsExpiredCard(card);
+    const isCorrectPassword = isPasswordCorrect(card, password);
+    console.log(isBlocked, isExpiredCard, isCorrectPassword);
 
-    if (isBlocked || isExpiredCard) {
-      return res.status(400).send("impossibel to block card");
+    if (isBlocked || isExpiredCard || !isCorrectPassword) {
+      const errorMessage =
+        (isBlocked && "card is already blocked") ||
+        (isExpiredCard && "card is expired") ||
+        (!isCorrectPassword && "password is incorrect");
+      return res.status(400).send(errorMessage);
     }
 
     update(id, { isBlocked: true });
@@ -127,15 +161,9 @@ class BlockCard {
   };
 }
 class UnblockCard {
-  protected unblockServices: CardServices;
-
-  constructor() {
-    this.unblockServices = new CardServices();
-  }
-
   unblockCard = async (req: Request<ReqParams>, res: Response) => {
-    const { unblockServices } = this;
     const { id } = req.params;
+    const { password } = req.body;
 
     const card = await findCardById(id);
 
@@ -143,11 +171,16 @@ class UnblockCard {
       return res.status(404).send("card not found");
     }
 
-    const isBlocked = unblockServices.isBlockedCard(card);
-    const isExpiredCard = unblockServices.alreadyExpiredCard(card);
+    const isBlocked = verifyIfIsBlockedCard(card);
+    const isExpiredCard = verifyIfIsExpiredCard(card);
+    const isCorrectPassword = isPasswordCorrect(card, password);
 
-    if (!isBlocked || isExpiredCard) {
-      return res.status(400).send("impossibel to unblock card");
+    if (!isBlocked || isExpiredCard || !isCorrectPassword) {
+      const errorMessage =
+        (!isBlocked && "card is already unblocked") ||
+        (isExpiredCard && "card is expired") ||
+        (!isCorrectPassword && "password is incorrect");
+      return res.status(400).send(errorMessage);
     }
 
     update(id, { isBlocked: false });
