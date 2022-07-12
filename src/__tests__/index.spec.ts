@@ -12,3 +12,4 @@ describe("testar soma", () => {
     expect(soma).toBe(3);
   });
 });
+
