@@ -1,46 +1,40 @@
 import { faker } from "@faker-js/faker";
+import { applyMixins } from "../mixins";
 import {
   findByTypeAndEmployeeId,
   insert,
   TransactionTypes,
   findCardById,
-  Card,
   update,
+  Card,
 } from "../repositories/cardRepository";
-import { findByApiKey } from "../repositories/companyRepository";
-import { findEmployeeById } from "../repositories/employeeRepository";
 import { typesCardSchemas } from "../schemas/validateSchemas";
-import { encrypt } from "../utils/cryptographyUtils";
+import { decrypt, encrypt } from "../utils/cryptographyUtils";
 import { isAfterDate, sumYears } from "../utils/dayjsUtil";
 
-export class CardServices {
-  private YEAR_VALID = 5;
+interface IActiveReturn {
+  status: boolean;
+  message: string;
+}
 
-  async apiKeyVerification(apiKey: string) {
-    const apiKeyQuery = await findByApiKey(apiKey);
-    return apiKeyQuery;
-  }
-
-  findEmployee(employeeId: number) {
-    const employee = findEmployeeById(employeeId);
-    return employee;
-  }
-  findCard(id: number) {
-    const card = findCardById(id);
-    return card;
-  }
-
-  verifyTypeCard(type: TransactionTypes): boolean {
-    const isValidType = typesCardSchemas.validate({ type }).error === undefined;
-
-    return isValidType;
-  }
-
-  verifyEmployeeHaveTypeCard(type: TransactionTypes, employeeId: number) {
+class HandlerTypeCard {
+  employeeAlreadyHaveTypeCard(type: TransactionTypes, employeeId: number) {
     const employeeByTypeAndId = findByTypeAndEmployeeId(type, employeeId);
     return employeeByTypeAndId;
   }
+  verifyCorrectTypeCard(type: TransactionTypes): boolean {
+    const isValidType = typesCardSchemas.validate({ type }).error === undefined;
+    return isValidType;
+  }
+}
 
+class HandlerCardData {
+  createNumberAndCVV(): { number: string; cvv: string } {
+    const number = faker.finance.creditCardNumber("####-####-####-####");
+    const cvv = faker.finance.creditCardCVV();
+    // const cryptCVV = encrypt(cvv);
+    return { number, cvv };
+  }
   cardholderNameFormat(cardholderName: string): string {
     const cardholderNameSplited = cardholderName.split(" ");
     const cardholderNameFormatted = [];
@@ -56,67 +50,63 @@ export class CardServices {
 
     return cardholderNameFormatted.join(" ");
   }
-
   cardExpirationDateFormat(): string {
-    return sumYears(new Date(), this.YEAR_VALID);
+    return sumYears(5);
   }
-
-  createNumberAndCVV(): { number: string; cvv: string } {
-    const number = faker.finance.creditCardNumber("####-####-####-####");
-    const cvv = faker.finance.creditCardCVV();
-    // const cryptCVV = encrypt(cvv);
-
-    return { number, cvv };
-  }
-  isBlockedCard(card: Card): boolean {
-    const isBlocked = card.isBlocked;
-
-    return isBlocked;
-  }
-  alreadyExpiredCard(card: Card): boolean {
-    const isAfterExpirationDate = isAfterDate(card.expirationDate);
-
-    return isAfterExpirationDate;
-  }
-
+}
+class HandlerCardActivation {
   async validateCardActivation(
     id: number,
     cvv: string,
-  ): Promise<Card | boolean> {
+  ): Promise<IActiveReturn | boolean> {
     const card = await findCardById(id);
 
-    if (!card) return false;
+    if (!card) return { status: true, message: "not exist this card" };
 
     const isAfterExpirationDate = isAfterDate(card.expirationDate);
-    const isAreadyActivated = card.password !== null;
-    const cvvIsInvalid = card.securityCode !== cvv;
+    const isAlreadyActivated = card.password !== null;
+    const cvvIsInvalid = decrypt(card.securityCode) !== cvv;
 
-    if (isAfterExpirationDate || isAreadyActivated || cvvIsInvalid)
-      return false;
-
+    if (isAfterExpirationDate || isAlreadyActivated || cvvIsInvalid) {
+      const message =
+        (isAfterExpirationDate && "this card is expired") ||
+        (isAlreadyActivated && "this card is already activated") ||
+        (cvvIsInvalid && "cvv is invalid");
+      return { status: true, message };
+    }
     return true;
+  }
+  insertPassword(id: number, password: string) {
+    const cryptPassword = encrypt(password);
+
+    update(id, { password: cryptPassword });
   }
 }
 
-export class CreateCardService extends CardServices {
-  constructor() {
-    super();
-  }
-  buildCardInfo(
-    employeeId: number,
-    type: TransactionTypes,
-    nameEmployee: string,
-  ) {
-    const { number, cvv } = this.createNumberAndCVV();
-    const cardholderName = this.cardholderNameFormat(nameEmployee);
+class HandlerCreateUpdateCard extends HandlerCardData {
+  buildCardInfos(employeeName: string) {
+    const { number: cardNumber, cvv: cardCVV } = this.createNumberAndCVV();
+    const cardholderName = this.cardholderNameFormat(employeeName);
     const expirationDate = this.cardExpirationDateFormat();
 
+    return { cardNumber, cardCVV, cardholderName, expirationDate };
+  }
+  insertCard({
+    cardCVV,
+    employeeId,
+    cardholderName,
+    number,
+    type,
+    expirationDate,
+  }) {
+    const cvvCrypt = encrypt(cardCVV);
+    const cardNumberCrypt = encrypt(number);
     insert({
       employeeId,
-      number,
+      number: cardNumberCrypt,
       type,
       cardholderName,
-      securityCode: cvv,
+      securityCode: cvvCrypt,
       expirationDate,
       isBlocked: false,
       isVirtual: false,
@@ -124,3 +114,34 @@ export class CreateCardService extends CardServices {
     });
   }
 }
+
+export class CardServices {
+  public employeeAlreadyHaveTypeCard: any;
+  public verifyCorrectTypeCard: any;
+  public validateCardActivation: any;
+  public buildCardInfos: any;
+  public insertCard: any;
+
+  constructor() {
+    this.employeeAlreadyHaveTypeCard =
+      new HandlerTypeCard().employeeAlreadyHaveTypeCard;
+    this.verifyCorrectTypeCard = new HandlerTypeCard().verifyCorrectTypeCard;
+    this.validateCardActivation =
+      new HandlerCardActivation().validateCardActivation;
+    this.buildCardInfos = new HandlerCreateUpdateCard().buildCardInfos;
+    this.insertCard = new HandlerCreateUpdateCard().insertCard;
+  }
+}
+
+export interface CardServices
+  extends HandlerCardActivation,
+    HandlerCardData,
+    HandlerTypeCard,
+    HandlerCreateUpdateCard {}
+
+applyMixins(CardServices, [
+  HandlerCardData,
+  HandlerTypeCard,
+  HandlerCardActivation,
+  HandlerCreateUpdateCard,
+]);

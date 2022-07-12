@@ -1,18 +1,15 @@
 import { NextFunction, Request, Response } from "express";
-import { CardServices } from "../services/cardServices";
+import { findByApiKey } from "../repositories/companyRepository";
 
 export const apiKeyMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const cardServices = new CardServices();
   const apiKey = req.headers["x-api-key"] as string;
+  const apiKeyQuery = await findByApiKey(apiKey);
 
-  const haveApiKey =
-    (await cardServices.apiKeyVerification(apiKey)) === undefined;
-
-  if (haveApiKey) {
+  if (apiKeyQuery === undefined) {
     const typeError = {
       stutsCode: 401,
       message: "not exist this api key",
